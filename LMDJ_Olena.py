@@ -204,7 +204,7 @@ def upcoming_birthdays(book):
 # === Меню ===
 
 def print_menu():
-    print("\nОберіть команду:")
+    print("\n команду:")
     print("1. Додати новий контакт")
     print("2. Показати всі контакти")
     print("3. Редагувати контакт")
