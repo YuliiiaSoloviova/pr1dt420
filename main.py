@@ -33,8 +33,31 @@ notes = [
 ]
 
 
-# --- Валідації Марина---
+# --- Валідації і видалення Марина---
 
+"""Goes under class AddressBook(UserDict):"""
+def delete(self, name):
+    if name not in self.data:
+        raise KeyError(f"Запис з ім'ям '{name}' не знайдено")
+    del self.data[name]
+
+"""Goes under class Phone(Field):"""
+def validate_phone(self, value):
+
+    if not value.isdigit():
+        raise ValueError("Номер телефону має містити лише цифри")
+
+    if len(value) != 10:
+        raise ValueError("Номер телефону має містити 10 цифр")
+
+    return value
+
+"""Goes under class Email(Field):"""
+
+def validate_email(self, value):
+    if not re.fullmatch(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", value):
+        raise ValueError("Невірний формат email")
+    return value
 
 
 # --- Контакти Олена---
@@ -66,7 +89,7 @@ class Phone(Field):
 
 class Email(Field):
     def __init__(self, value):
-        if value and not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", value):
+        if value and not re.fullmatch(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", value):
             raise ValueError("Невірний формат email.")
         super().__init__(value)
 
