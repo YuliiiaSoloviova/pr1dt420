@@ -3,7 +3,9 @@ from datetime import datetime, timedelta
 import re
 import pickle
 
+
 # ==== Валідація полів (Марина) ====
+
 
 class Field:
     def __init__(self, value):
@@ -12,8 +14,10 @@ class Field:
     def __str__(self):
         return str(self.value)
 
+
 class Name(Field):
     pass
+
 
 class Phone(Field):
     def __init__(self, value):
@@ -21,14 +25,17 @@ class Phone(Field):
             raise ValueError("Телефон має містити рівно 10 цифр.")
         super().__init__(value)
 
+
 class Email(Field):
     def __init__(self, value):
         if value and not re.fullmatch(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", value):
             raise ValueError("Невірний формат email.")
         super().__init__(value)
 
+
 class Address(Field):
     pass
+
 
 class Birthday(Field):
     def __init__(self, value):
@@ -40,6 +47,7 @@ class Birthday(Field):
 
 
 # ==== Робота з контактами (Олена) ====
+
 
 class Record:
     def __init__(self, name):
@@ -72,6 +80,7 @@ class Record:
                 f"Адреса: {address}\n"
                 f"День народження: {birthday}")
 
+
 class AddressBook(UserDict):
     def add_record(self, record):
         self.data[record.name.value] = record
@@ -99,6 +108,7 @@ class AddressBook(UserDict):
 
 # ==== Нотатки (Даша) ====
 
+
 class Note:
     def __init__(self, text, tags=None):
         self.text = text
@@ -112,6 +122,7 @@ class Note:
     def __str__(self):
         tags_str = f" [теги: {', '.join(self.tags)}]" if self.tags else ""
         return f"{self.created.strftime('%Y-%m-%d %H:%M')} — {self.text}{tags_str}"
+
 
 class NoteBook:
     def __init__(self):
@@ -155,10 +166,26 @@ class NoteBook:
         except FileNotFoundError:
             return NoteBook()
 
+
+# ==== Збереження контактів (нове) ====
+
+def save_contacts(book, filename="addressbook.pkl"):
+    with open(filename, "wb") as f:
+        pickle.dump(book, f)
+
+def load_contacts(filename="addressbook.pkl"):
+    try:
+        with open(filename, "rb") as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return AddressBook()
+
+
 # ==== Меню та логіка взаємодії (Юля) ====
 
-book = AddressBook()
+book = load_contacts()
 notebook = NoteBook.load_notes()
+
 
 def input_error(func):
     def wrapper(*args, **kwargs):
@@ -167,6 +194,7 @@ def input_error(func):
         except (IndexError, KeyError, ValueError) as e:
             return f"Помилка: {str(e)}"
     return wrapper
+
 
 @input_error
 def add_contact():
@@ -192,17 +220,20 @@ def add_contact():
     book.add_record(record)
     return "Контакт додано."
 
+
 @input_error
 def show_all_contacts():
     if not book.data:
         return "Контактів немає."
     return "\n\n".join(str(r) for r in book.data.values())
 
+
 @input_error
 def show_contact():
     name = input("Введіть ім’я контакту: ")
     record = book.find(name)
     return str(record) if record else "Контакт не знайдено."
+
 
 @input_error
 def edit_contact():
@@ -215,11 +246,13 @@ def edit_contact():
     record.add_phone(new_phone)
     return "Контакт оновлено."
 
+
 @input_error
 def delete_contact():
     name = input("Ім’я для видалення: ")
     book.delete(name)
     return "Контакт видалено."
+
 
 @input_error
 def list_birthdays():
@@ -229,6 +262,7 @@ def list_birthdays():
         return "Немає днів народження."
     return "\n".join([f"{name}: {date}" for name, date in upcoming])
 
+
 @input_error
 def add_note():
     text = input("Нотатка: ")
@@ -236,11 +270,13 @@ def add_note():
     notebook.add_note(text, [t.strip() for t in tags])
     return "Нотатку додано."
 
+
 @input_error
 def search_notes():
     keyword = input("Ключове слово: ")
     found = notebook.find_notes(keyword)
     return "\n\n".join(str(n) for n in found) if found else "Нічого не знайдено."
+
 
 @input_error
 def edit_note():
@@ -249,11 +285,13 @@ def edit_note():
     text = input("Новий текст: ")
     return "Оновлено." if notebook.edit_note(idx, text) else "Помилка."
 
+
 @input_error
 def delete_note():
     print(notebook.list_notes())
     idx = int(input("Номер для видалення: ")) - 1
     return "Видалено." if notebook.delete_note(idx) else "Помилка."
+
 
 def main_menu():
     while True:
@@ -285,10 +323,12 @@ def main_menu():
         elif choice == "10": print(delete_note())
         elif choice == "0":
             notebook.save_notes()
+            save_contacts(book)
             print("До побачення!")
             break
         else:
             print("Невірний вибір.")
+
 
 if __name__ == "__main__":
     main_menu()
