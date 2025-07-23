@@ -6,7 +6,7 @@ from colorama import init, Fore, Style
 
 init(autoreset=True)
 
-# ==== Валідація полів (Марина) ====
+# ==== Валідація полів ====
 
 class Field:
     def __init__(self, value):
@@ -41,7 +41,7 @@ class Birthday(Field):
         except ValueError:
             raise ValueError("❌ Неправильний формат. Використовуйте DD.MM.YYYY")
 
-# ==== Робота з контактами (Олена) ====
+# ==== Робота з контактами ====
 
 class Record:
     def __init__(self, name):
@@ -112,7 +112,7 @@ def load_contacts(filename="addressbook.pkl"):
     except (FileNotFoundError, EOFError):
         return AddressBook()
 
-# ==== Нотатки (Даша) ====
+# ==== Нотатки ====
 
 class Note:
     def __init__(self, text, tags=None):
@@ -200,7 +200,9 @@ def add_contact():
     birthday = input("День народження (DD.MM.YYYY): ")
 
     if name in book.data:
-        return Fore.YELLOW + "⚠️ Контакт з таким ім’ям вже існує."
+        print(Fore.YELLOW + "⚠️ Контакт з таким ім’ям вже існує.")
+        input("Натисніть Enter, щоб продовжити...")
+        return
 
     try:
         record = Record(name)
@@ -214,75 +216,133 @@ def add_contact():
             record.add_birthday(birthday)
 
         book.add_record(record)
-        return Fore.GREEN + "✅ Контакт додано."
+        print(Fore.GREEN + "✅ Контакт додано.")
     except Exception as e:
-        return Fore.RED + f"❌ Помилка: {str(e)}"
+        print(Fore.RED + f"❌ Помилка: {str(e)}")
+    input("Натисніть Enter, щоб продовжити...")
 
 def search_contact():
     name = input("Введіть ім’я для пошуку: ")
     record = book.find(name)
-    return str(record) if record else Fore.YELLOW + "Контакт не знайдено."
+    print(str(record) if record else Fore.YELLOW + "Контакт не знайдено.")
+    input("Натисніть Enter, щоб продовжити...")
 
 def edit_contact():
     name = input("Ім’я контакту для редагування: ")
     record = book.find(name)
     if not record:
-        return Fore.YELLOW + "Контакт не знайдено."
-    phone = input("Новий телефон (10 цифр): ")
-    record.phones = []
-    if phone:
-        record.add_phone(phone)
-    return Fore.GREEN + "✅ Контакт оновлено."
+        print(Fore.YELLOW + "Контакт не знайдено.")
+        input("Натисніть Enter, щоб продовжити...")
+        return
+
+    print(Fore.CYAN + f"Редагуємо контакт: {record.name.value}")
+    print("1. Додати телефон")
+    print("2. Очистити й ввести нові телефони")
+    choice = input("Ваш вибір (1 або 2): ")
+
+    if choice == "1":
+        new_phone = input("Новий телефон (10 цифр): ")
+        try:
+            record.add_phone(new_phone)
+            print(Fore.GREEN + "✅ Телефон додано.")
+        except ValueError as e:
+            print(Fore.RED + str(e))
+    elif choice == "2":
+        record.phones = []
+        new_phone = input("Новий телефон (10 цифр): ")
+        try:
+            record.add_phone(new_phone)
+            print(Fore.GREEN + "✅ Телефон оновлено.")
+        except ValueError as e:
+            print(Fore.RED + str(e))
+    else:
+        print(Fore.RED + "Невірний вибір.")
+
+    input("Натисніть Enter, щоб продовжити...")
 
 def delete_contact():
     name = input("Ім’я контакту для видалення: ")
     book.delete(name)
-    return Fore.GREEN + "✅ Контакт видалено."
+    print(Fore.GREEN + "✅ Контакт видалено.")
+    input("Натисніть Enter, щоб продовжити...")
 
 def upcoming_birthdays():
-    days = int(input("Через скільки днів показати дні народження: "))
+    try:
+        days = int(input("Через скільки днів показати дні народження: "))
+    except ValueError:
+        print(Fore.RED + "❌ Введіть ціле число.")
+        input("Натисніть Enter, щоб продовжити...")
+        return
     upcoming = book.get_upcoming_birthdays(days)
     if not upcoming:
-        return Fore.YELLOW + "Немає найближчих днів народження."
-    return "\n".join([f"{name}: {date}" for name, date in upcoming])
+        print(Fore.YELLOW + "Немає найближчих днів народження.")
+    else:
+        print("\n".join([f"{name}: {date}" for name, date in upcoming]))
+    input("Натисніть Enter, щоб продовжити...")
 
 def add_note():
     text = input("Введіть текст нотатки: ")
     tags = input("Теги (через кому): ").split(",")
     notebook.add_note(text, [t.strip() for t in tags if t.strip()])
-    return Fore.GREEN + "✅ Нотатку додано."
+    print(Fore.GREEN + "✅ Нотатку додано.")
+    input("Натисніть Enter, щоб продовжити...")
 
 def search_notes():
     keyword = input("Ключове слово для пошуку: ")
     results = notebook.find_notes(keyword)
-    return "\n".join(str(n) for n in results) if results else Fore.YELLOW + "Нічого не знайдено."
+    print("\n".join(str(n) for n in results) if results else Fore.YELLOW + "Нічого не знайдено.")
+    input("Натисніть Enter, щоб продовжити...")
 
 def edit_note():
     print(notebook.list_notes())
-    idx = int(input("Номер нотатки для редагування: ")) - 1
-    text = input("Новий текст: ")
-    return Fore.GREEN + "✅ Оновлено." if notebook.edit_note(idx, text) else Fore.RED + "Помилка."
+    try:
+        idx = int(input("Номер нотатки для редагування: ")) - 1
+        text = input("Новий текст: ")
+        if notebook.edit_note(idx, text):
+            print(Fore.GREEN + "✅ Оновлено.")
+        else:
+            print(Fore.RED + "Помилка.")
+    except ValueError:
+        print(Fore.RED + "❌ Введено нечислове значення.")
+    input("Натисніть Enter, щоб продовжити...")
 
 def delete_note():
     print(notebook.list_notes())
-    idx = int(input("Номер нотатки для видалення: ")) - 1
-    return Fore.GREEN + "✅ Видалено." if notebook.delete_note(idx) else Fore.RED + "Помилка."
+    try:
+        idx = int(input("Номер нотатки для видалення: ")) - 1
+        if notebook.delete_note(idx):
+            print(Fore.GREEN + "✅ Видалено.")
+        else:
+            print(Fore.RED + "Помилка.")
+    except ValueError:
+        print(Fore.RED + "❌ Введено нечислове значення.")
+    input("Натисніть Enter, щоб продовжити...")
+
+def show_contacts_formatted():
+    if not book.data:
+        print(Fore.YELLOW + "📭 Контактів немає.")
+    else:
+        for record in book.data.values():
+            print(Fore.CYAN + "-"*40)
+            print(record)
+        print(Fore.CYAN + "-"*40)
+    input("Натисніть Enter, щоб продовжити...")
 
 def run():
     while True:
         show_menu()
         choice = input("Оберіть дію: ")
-        if choice == "1": print(add_contact())
-        elif choice == "2": print("\n".join(str(r) for r in book.data.values()))
-        elif choice == "3": print(search_contact())
-        elif choice == "4": print(edit_contact())
-        elif choice == "5": print(delete_contact())
-        elif choice == "6": print(upcoming_birthdays())
-        elif choice == "7": print(add_note())
-        elif choice == "8": print(Fore.YELLOW + notebook.list_notes())
-        elif choice == "9": print(search_notes())
-        elif choice == "10": print(edit_note())
-        elif choice == "11": print(delete_note())
+        if choice == "1": add_contact()
+        elif choice == "2": show_contacts_formatted()
+        elif choice == "3": search_contact()
+        elif choice == "4": edit_contact()
+        elif choice == "5": delete_contact()
+        elif choice == "6": upcoming_birthdays()
+        elif choice == "7": add_note()
+        elif choice == "8": print(Fore.YELLOW + notebook.list_notes()); input("Натисніть Enter...")
+        elif choice == "9": search_notes()
+        elif choice == "10": edit_note()
+        elif choice == "11": delete_note()
         elif choice == "0":
             save_contacts(book)
             notebook.save_notes()
@@ -290,6 +350,7 @@ def run():
             break
         else:
             print(Fore.RED + "Невірний вибір. Спробуйте ще раз.")
+            input("Натисніть Enter, щоб продовжити...")
 
 if __name__ == "__main__":
     run()
